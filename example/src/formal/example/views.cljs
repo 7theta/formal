@@ -3,10 +3,18 @@
 
 (def sample-schema
   [:map
-   [:name [:string {:min 0 :max 100}]]
-   [:description string?]])
+   [:name {:placeholder "Name"
+           :default-value "tom"}
+    [:string {:min 0 :max 100}]]
+   [:description {:placeholder "Description"}
+    string?]
+   [:enabled {:checked true
+              :label "Enabled"}
+    [:boolean]]
+   [:age {:placeholder "Age"} number?]])
 
 (defn main-panel
   []
   [fhtml/form
-   {:schema sample-schema}])
+   {:schema sample-schema
+    :on-change #(println %)}])

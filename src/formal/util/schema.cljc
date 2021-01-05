@@ -1,5 +1,6 @@
 (ns formal.util.schema
   (:require [malli.core :as m]
+            [malli.error :as me]
             [malli.util :as mu]
             [utilis.map :refer [compact map-vals]]))
 
@@ -10,7 +11,7 @@
         'integer? :integer
         'number? :number} symbol))
 
-(defn type->component
+(defn type->input
   [type]
   (let [type (cond
                (keyword? type) type
@@ -25,12 +26,14 @@
   (let [type (m/-type schema)]
     (compact
      {:type type
-      :component (type->component type)
+      :input (type->input type)
       :schema schema
       :validate (m/validator schema)
       :properties (m/-properties schema)
       :children children
-      :options (m/-options schema)})))
+      :options (m/-options schema)
+      :explain #(when-let [error (m/explain schema %)]
+                  (with-meta error {:human (me/humanize error)}))})))
 
 (defn walked
   [schema]
