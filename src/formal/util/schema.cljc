@@ -23,15 +23,23 @@
 
 (defn schema-walker
   [schema properties children options]
-  (let [type (m/-type schema)]
+  (let [type (m/type schema)]
     (compact
      {:type type
+      :default-values (when (= type :map)
+                        (->> (m/form schema)
+                             (rest)
+                             (map (fn [[id {:keys [default-value]}]]
+                                    (when default-value
+                                      [id default-value])))
+                             (filter seq)
+                             (into {})))
       :input (type->input type)
       :schema schema
       :validate (m/validator schema)
-      :properties (m/-properties schema)
+      :properties (m/properties schema)
       :children children
-      :options (m/-options schema)
+      :options (m/options schema)
       :explain #(when-let [error (m/explain schema %)]
                   (with-meta error {:human (me/humanize error)}))})))
 

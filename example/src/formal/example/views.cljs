@@ -8,7 +8,7 @@
     [:string {:min 0 :max 100}]]
    [:description {:placeholder "Description"}
     string?]
-   [:enabled {:checked true
+   [:enabled {:default-value true
               :label "Enabled"}
     [:boolean]]
    [:age {:placeholder "Age"} number?]])

@@ -35,9 +35,9 @@
 
 (fui/reg-input
  :html/boolean
- (fn [{:keys [on-change error checked] :as props}]
+ (fn [{:keys [on-change error default-value] :as props}]
    (let [this (r/current-component)
-         {:keys [checked] :or {checked checked}} (r/state this)]
+         {:keys [checked] :or {checked default-value}} (r/state this)]
      [form-item {:error error}
       [:label (:label props)]
       [:input {:checked (boolean checked)

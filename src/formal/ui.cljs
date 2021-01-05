@@ -38,11 +38,12 @@
 
 (defn form
   "A form is a map of input elements."
-  [{:keys [schema namespace layout on-change]
-    :or {namespace :html
-         layout layout/default}}]
+  []
   (let [this (r/current-component)
-        {:keys [children type] :as schema} (ensure-map-schema (fus/walked schema))]
+        {:keys [schema namespace layout on-change]
+         :or {namespace :html
+              layout layout/default}} (r/props this)
+        {:keys [children type default-values] :as schema} (ensure-map-schema (fus/walked schema))]
     (into [layout {:schema schema}]
           (->> children
                (map (fn [[id options props]]
@@ -51,9 +52,9 @@
                                  (assoc :namespace namespace
                                         :id id
                                         :on-change (fn [value]
-                                                     (let [state (assoc (r/state this) id value)]
-                                                       ((fsafe on-change) state)
-                                                       (r/set-state this state)))))]))
+                                                     (let [values (assoc (merge default-values (:values (r/state this))) id value)]
+                                                       ((fsafe on-change) values)
+                                                       (r/set-state this {:values values})))))]))
                (doall)))))
 
 (defn reg-input
