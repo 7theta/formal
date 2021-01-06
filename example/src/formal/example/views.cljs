@@ -4,14 +4,15 @@
 (def sample-schema
   [:map
    [:name {:placeholder "Name"
-           :default-value "tom"}
+           :default-value "tom"
+           :optional true}
     [:string {:min 0 :max 100}]]
    [:description {:placeholder "Description"}
     string?]
    [:enabled {:default-value true
               :label "Enabled"}
-    [:boolean]]
-   [:age {:placeholder "Age"} number?]])
+    boolean?]
+   [:age {:placeholder "Age"} integer?]])
 
 (defn main-panel
   []

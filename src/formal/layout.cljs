@@ -4,5 +4,8 @@
 (def div :div)
 
 (defn default
-  []
-  (into [div] (r/children (r/current-component))))
+  [{:keys [error]}]
+  (into [div]
+        (concat (r/children (r/current-component))
+                [[div {:style {:color "red"}}
+                  (-> error meta :human str)]])))
