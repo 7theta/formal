@@ -1,6 +1,6 @@
 (ns formal.ui
   (:require [formal.core :as f]
-            [formal.layout :as layout]
+            [formal.coll :as coll]
             [formal.util.schema :as fus]
             [reagent.core :as r]
             [utilis.fn :refer [fsafe]]
@@ -8,7 +8,7 @@
 
 ;;; Declarations
 
-(declare form* input*)
+(declare input* ensure-map-schema)
 
 (defonce inputs (atom {}))
 
@@ -21,14 +21,13 @@
 
 (defn form
   "A form is a map of input elements."
-  [{:keys [namespace layout on-change]
-    :or {namespace :html
-         layout layout/default}
+  [{:keys [namespace schema on-change]
+    :or {namespace :html}
     :as props}]
-  [form*
-   (merge props
-          {:namespace namespace
-           :layout layout})])
+  [input
+   (merge props (ensure-map-schema (fus/walked schema))
+          {:input :map
+           :namespace namespace})])
 
 (defn reg-input
   "An input is an element used to collect a single piece of data."
@@ -49,11 +48,13 @@
 
 (reg-input
  :default
- (fn [props]
-   (let [message (str "[formal] No component found for props - "
-                      (pr-str (select-keys props [:namespace :input])))]
-     (js/console.warn message)
-     nil)))
+ (fn [{:keys [namespace input] :as props}]
+   (js/console.warn
+    (str "[formal] No component found for input "
+         (if (or namespace input)
+           (keyword namespace input)
+           props)))
+   nil))
 
 ;;; Implementation
 
@@ -64,43 +65,6 @@
                     {:schema schema})))
   schema)
 
-(defn- form*
-  []
-  (r/create-class
-   {:render (fn [this]
-              (let [{:keys [namespace layout on-change]} (r/props this)
-                    {:keys [error schema change-handler]} (r/state this)]
-                (into [layout {:schema schema :error error}]
-                      (->> (:children schema)
-                           (map (fn [[id options props]]
-                                  [input (-> props
-                                             (merge options)
-                                             (assoc :namespace namespace
-                                                    :id id
-                                                    :on-change (partial change-handler id)))]))
-                           (doall)))))
-    :component-did-update (fn [this [_ new-props]]
-                            (let [props (r/props this)]
-                              (when (not= (:schema props) (:schema new-props))
-                                (r/set-state this {:schema (ensure-map-schema (fus/walked new-props))}))))
-    :get-initial-state (fn [this]
-                         (let [{:keys [schema]} (r/props this)
-                               {:keys [default-values validate explain] :as schema} (ensure-map-schema (fus/walked schema))]
-                           {:schema schema
-                            :error (when (not (validate default-values))
-                                     (explain default-values))
-                            :change-handler (fn [id value]
-                                              (let [{:keys [schema values]} (r/state this)
-                                                    {:keys [on-change]} (r/props this)
-                                                    {:keys [default-values validate explain]} schema
-                                                    values (assoc (merge default-values values) id value)
-                                                    valid? (validate values)]
-                                                (r/set-state
-                                                 this {:values values
-                                                       :error (when (not valid?)
-                                                                (explain values))})
-                                                (when valid? ((fsafe on-change) values))))}))}))
-
 (defn input*
   []
   (r/create-class
@@ -109,16 +73,30 @@
                     {:keys [namespace input] :as props} (assoc (r/props this)
                                                                :on-change on-change
                                                                :error error
-                                                               :value value)]
-                [(component namespace input) props]))
+                                                               :value value)
+                    props (assoc props
+                                 :render-input input*
+                                 :component component)]
+                (condp = input
+                  :map [coll/map props]
+                  :sequential [coll/sequential props]
+                  :vector [coll/vector props]
+                  :set [coll/set props]
+                  :tuple [coll/tuple props]
+                  [(component namespace input) props])))
+    :component-did-mount (fn [this]
+                           (let [{:keys [value error on-change]} (r/state this)]
+                             (when (not error)
+                               (on-change value))))
     :get-initial-state (fn [this]
                          (let [{:keys [default-value validate explain]} (r/props this)]
                            {:value default-value
                             :error (when (and default-value (not (validate default-value)))
                                      (explain default-value))
                             :on-change (fn [value]
-                                         (let [{:keys [on-change validate explain]} (r/props this)]
-                                           (if (validate value)
-                                             (do (r/set-state this {:value value :error nil})
-                                                 ((fsafe on-change) value))
-                                             (r/set-state this {:error (explain value)}))))}))}))
+                                         (let [{:keys [on-change validate explain]} (r/props this)
+                                               valid? (validate value)]
+                                           (r/set-state this {:value value
+                                                              :error (when (not valid?)
+                                                                       (explain value))})
+                                           (when valid? ((fsafe on-change) value))))}))}))

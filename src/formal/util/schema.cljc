@@ -13,27 +13,16 @@
 
 (defn type->input
   [type]
-  (let [type (cond
-               (keyword? type) type
-               (or (fn? type) (symbol? type)) (symbol->keyword type)
-               :else (throw (ex-info "Unhandled type" {:type type})))]
-    (condp = type
-      :map :form
-      type)))
+  (cond
+    (keyword? type) type
+    (or (fn? type) (symbol? type)) (symbol->keyword type)
+    :else (throw (ex-info "Unhandled type" {:type type}))))
 
 (defn schema-walker
   [schema properties children options]
   (let [type (m/type schema)]
     (compact
      {:type type
-      :default-values (when (= type :map)
-                        (->> (m/form schema)
-                             (rest)
-                             (map (fn [[id {:keys [default-value]}]]
-                                    (when default-value
-                                      [id default-value])))
-                             (filter seq)
-                             (into {})))
       :input (type->input type)
       :schema schema
       :validate (m/validator schema)

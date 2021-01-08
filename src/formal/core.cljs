@@ -10,9 +10,7 @@
 ;; - provide an "easy" namespace that combines everything
 
 ;; TODO
-;; - handle optional schemas
 ;; - handle all collection schemas by default
-;; - provide named layout ability
 
 ;; - handle nested [:maybe ... ] schemas
 

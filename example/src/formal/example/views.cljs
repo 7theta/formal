@@ -4,7 +4,7 @@
 (def sample-schema
   [:map
    [:name {:placeholder "Name"
-           :default-value "tom"
+           :default-value "tom3"
            :optional true}
     [:string {:min 0 :max 100}]]
    [:description {:placeholder "Description"}
@@ -12,10 +12,15 @@
    [:enabled {:default-value true
               :label "Enabled"}
     boolean?]
-   [:age {:placeholder "Age"} integer?]])
+   [:age {:placeholder "Age"} integer?]
+   #_[:fruit [:sequential string?]]
+   [:config {:default-value {:foo "foo"}}
+    [:map
+     [:foo :string]
+     [:bar :string]]]])
 
 (defn main-panel
   []
   [fhtml/form
    {:schema sample-schema
-    :on-change #(println %)}])
+    :on-change #(cljs.pprint/pprint {:sample %})}])
