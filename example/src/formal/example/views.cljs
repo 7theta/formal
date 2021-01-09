@@ -13,11 +13,11 @@
               :label "Enabled"}
     boolean?]
    [:age {:placeholder "Age"} integer?]
-   #_[:fruit [:sequential string?]]
+   [:fruit [:sequential string?]]
    [:config {:default-value {:foo "foo"}}
     [:map
-     [:foo :string]
-     [:bar :string]]]])
+     [:foo {:label "Foo"} :string]
+     [:bar {:label "Bar"} :string]]]])
 
 (defn main-panel
   []

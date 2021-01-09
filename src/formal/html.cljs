@@ -75,17 +75,21 @@
 
 (fui/reg-input
  :html/map
- (fn [{:keys [error inputs value]}]
-   (into [:div {:style {:padding-left 16}}]
-         (concat (->> inputs
-                      (sort-by first)
-                      (map second))
-                 [[:div {:style {:color "red"}}
-                   (str (-> error meta :human))]]))))
+ (fn [{:keys [error inputs id]}]
+   [:div
+    [:div (str id)]
+    (into [:div (when id {:style {:padding-left 16}})]
+          (concat (->> inputs
+                       (sort-by first)
+                       (map second))
+                  [[:div {:style {:color "red"}}
+                    (str (-> error meta :human))]]))]))
 
 (fui/reg-input
  :html/sequential
- (fn [{:keys [value on-change] :as props}]
+ (fn [{:keys [inputs on-change value error] :as props}]
    (into [:div]
-         (concat (r/children (r/current-component))
-                 [[:button {:on-click #(on-change (conj value nil))} "Add"]]))))
+         (concat inputs
+                 [[:button {:on-click #(on-change (conj value nil))} "Add"]
+                  [:div {:style {:color "red"}}
+                   (str (-> error meta :human))]]))))
