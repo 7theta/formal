@@ -1,5 +1,5 @@
 (ns formal.html
-  (:require [formal.ui :as fui]
+  (:require [formal.core :as f]
             [formal.util.component :as c]
             [utilis.js :as j]
             [utilis.types.number :refer [string->double string->long]]
@@ -9,7 +9,7 @@
 
 (defn form
   [{:keys [schema] :as props}]
-  [fui/form (assoc props :namespace :html)])
+  [f/form (assoc props :namespace :html)])
 
 (defn form-item
   []
@@ -30,7 +30,7 @@
 
 ;;; Inputs
 
-(fui/reg-input
+(f/reg-input
  :html/string
  (fn [{:keys [on-change] :as props}]
    [form-item props
@@ -39,7 +39,7 @@
                 (assoc :type :text
                        :on-input #(on-change (j/get-in % [:currentTarget :value]))))]]))
 
-(fui/reg-input
+(f/reg-input
  :html/boolean
  (fn [{:keys [on-change default-value] :as props}]
    (let [this (r/current-component)
@@ -51,7 +51,7 @@
                              (on-change checked)
                              (r/set-state this {:checked checked}))}]])))
 
-(fui/reg-input
+(f/reg-input
  :html/integer
  (fn [{:keys [on-change] :as props}]
    [form-item props
@@ -62,7 +62,7 @@
                                    (string->long
                                     (j/get-in % [:currentTarget :value])))))]]))
 
-(fui/reg-input
+(f/reg-input
  :html/number
  (fn [{:keys [on-change] :as props}]
    [form-item props
@@ -73,7 +73,7 @@
                                    (string->double
                                     (j/get-in % [:currentTarget :value])))))]]))
 
-(fui/reg-input
+(f/reg-input
  :html/map
  (fn [{:keys [error inputs id]}]
    [:div
@@ -85,7 +85,7 @@
                   [[:div {:style {:color "red"}}
                     (str (-> error meta :human))]]))]))
 
-(fui/reg-input
+(f/reg-input
  :html/sequential
  (fn [{:keys [inputs on-change value error] :as props}]
    (into [:div]

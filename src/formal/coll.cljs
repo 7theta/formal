@@ -33,18 +33,6 @@
                                             (let [{:keys [on-change value]} (r/props this)]
                                               ((fsafe on-change) (assoc value id input-value))))})}))
 
-
-(defn set
-  []
-
-  )
-
-(defn tuple
-  []
-
-
-  )
-
 (defn sequential
   [props]
   (r/create-class
