@@ -14,6 +14,6 @@ To run the example project
 
 ## Copyright and License
 
-Copyright © 2020 7theta
+Copyright © 2021 7theta
 
 Distributed under the Eclipse Public License.
