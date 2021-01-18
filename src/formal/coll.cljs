@@ -19,14 +19,15 @@
                         (->> children
                              (clojure.core/map-indexed
                               (fn [index [id options schema]]
-                                [id [render-input
-                                     (merge {:default-value (get default-value id)} schema options
-                                            {:id id
-                                             :namespace namespace
-                                             :key (str id "-" index)
-                                             :on-change (fn [input-value]
-                                                          (let [{:keys [change-handler]} (r/state this)]
-                                                            (change-handler id input-value)))})]]))
+                                (let [props (merge {:default-value (get default-value id)} schema options
+                                                   {:id id
+                                                    :index index
+                                                    :namespace namespace
+                                                    :key (str id "-" index)
+                                                    :on-change (fn [input-value]
+                                                                 (let [{:keys [change-handler]} (r/state this)]
+                                                                   (change-handler id input-value)))})]
+                                  [id {:render render-input :props props}])))
                              (into {})))]))
     :get-initial-state (fn [this]
                          {:change-handler (fn [id input-value]
@@ -44,13 +45,14 @@
                         :inputs (->> value
                                      (clojure.core/map-indexed
                                       (fn [index value]
-                                        [render-input
-                                         (merge child-schema
-                                                {:namespace namespace
-                                                 :key (str "sequential-child-" index)
-                                                 :on-change (fn [input-value]
-                                                              (let [{:keys [change-handler]} (r/state this)]
-                                                                (change-handler index input-value)))})]))
+                                        {:render render-input
+                                         :props (merge child-schema
+                                                       {:namespace namespace
+                                                        :index index
+                                                        :key (str "sequential-child-" index)
+                                                        :on-change (fn [input-value]
+                                                                     (let [{:keys [change-handler]} (r/state this)]
+                                                                       (change-handler index input-value)))})}))
                                      (doall)))]))
     :get-initial-state (fn [this]
                          {:change-handler (fn [index input-value]
