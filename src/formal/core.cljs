@@ -74,11 +74,12 @@
   (r/create-class
    {:render (fn [this]
               (let [{:keys [value error on-change]} (r/state this)
-                    {:keys [namespace input] :as props} (assoc (r/props this)
-                                                               :on-change on-change
-                                                               :error error
-                                                               :value value)
+                    {:keys [namespace input optional] :as props} (assoc (r/props this)
+                                                                        :on-change on-change
+                                                                        :error error
+                                                                        :value value)
                     props (assoc props
+                                 :required (not optional)
                                  :render-input input*
                                  :component component)]
                 (condp = input
