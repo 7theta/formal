@@ -13,8 +13,8 @@
   []
   (r/create-class
    {:render (fn [this]
-              (let [{:keys [component namespace input children default-value render-input] :as props} (r/props this)]
-                [(component namespace input)
+              (let [{:keys [component value namespace input children default-value components render-input] :as props} (r/props this)]
+                [(component components namespace input)
                  (assoc props :inputs
                         (->> children
                              (clojure.core/map-indexed
@@ -22,6 +22,7 @@
                                 (let [props (merge {:default-value (get default-value id)} schema options
                                                    {:id id
                                                     :index index
+                                                    :components components
                                                     :namespace namespace
                                                     :key (str id "-" index)
                                                     :on-change (fn [input-value]
@@ -31,23 +32,24 @@
                              (into {})))]))
     :get-initial-state (fn [this]
                          {:change-handler (fn [id input-value]
-                                            (let [{:keys [on-change value]} (r/props this)]
-                                              ((fsafe on-change) (assoc value id input-value))))})}))
+                                            (let [{:keys [on-update]} (r/props this)]
+                                              ((fsafe on-update) #(assoc % id input-value))))})}))
 
 (defn sequential
   [props]
   (r/create-class
    {:render (fn [this]
-              (let [{:keys [component namespace input children value render-input] :as props} (r/props this)
+              (let [{:keys [component namespace input children value render-input components] :as props} (r/props this)
                     [child-schema & _] children]
-                [(component namespace input)
+                [(component components namespace input)
                  (assoc props
                         :inputs (->> value
                                      (clojure.core/map-indexed
                                       (fn [index value]
                                         {:render render-input
                                          :props (merge child-schema
-                                                       {:namespace namespace
+                                                       {:components components
+                                                        :namespace namespace
                                                         :index index
                                                         :key (str "sequential-child-" index)
                                                         :on-change (fn [input-value]

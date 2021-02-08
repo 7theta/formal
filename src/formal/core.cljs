@@ -39,9 +39,12 @@
     (swap! inputs assoc-in ks component)))
 
 (defn component
-  [namespace input]
-  (or (get-in @inputs [namespace input :component])
-      (get-in @inputs [:default :component])))
+  ([namespace input] (component nil namespace input))
+  ([components namespace input]
+   (let [components (merge @inputs components)]
+     (or (get components (keyword namespace input))
+         (get-in components [namespace input :component])
+         (get-in components [:default :component])))))
 
 ;;; Defaults
 
@@ -73,34 +76,35 @@
   []
   (r/create-class
    {:render (fn [this]
-              (let [{:keys [value error on-change]} (r/state this)
-                    {:keys [namespace input optional] :as props} (assoc (r/props this)
-                                                                        :on-change on-change
-                                                                        :error error
-                                                                        :value value)
+              (let [{:keys [value error on-change on-update]} (r/state this)
+                    {:keys [namespace input optional components] :as props} (assoc (r/props this)
+                                                                                   :on-update on-update
+                                                                                   :on-change on-change
+                                                                                   :error error
+                                                                                   :value value)
                     props (assoc props
                                  :required (not optional)
                                  :render-input input*
                                  :component component)]
-                (condp = input
-                  :map [coll/map props]
-                  :sequential [coll/sequential props]
-                  :vector [coll/vector props]
-                  :maybe [maybe props]
-                  [(component namespace input) props])))
-    :component-did-mount (fn [this]
-                           (let [{:keys [value error on-change]} (r/state this)]
-                             (when (not error)
-                               (on-change value))))
+                [(condp = input
+                   :map coll/map
+                   :sequential coll/sequential
+                   :vector coll/vector
+                   :maybe maybe
+                   (component components namespace input)) props]))
     :get-initial-state (fn [this]
-                         (let [{:keys [default-value validate explain]} (r/props this)]
+                         (let [{:keys [default-value validate explain]} (r/props this)
+                               change-handler (fn [value]
+                                                (let [{:keys [on-change validate explain]} (r/props this)
+                                                      valid? (validate value)]
+                                                  (r/set-state this {:value value
+                                                                     :error (when (not valid?)
+                                                                              (explain value))})
+                                                  (when valid? ((fsafe on-change) value))))]
                            {:value default-value
                             :error (when (and default-value (not (validate default-value)))
                                      (explain default-value))
-                            :on-change (fn [value]
-                                         (let [{:keys [on-change validate explain]} (r/props this)
-                                               valid? (validate value)]
-                                           (r/set-state this {:value value
-                                                              :error (when (not valid?)
-                                                                       (explain value))})
-                                           (when valid? ((fsafe on-change) value))))}))}))
+                            :on-update (fn [f & args]
+                                         (let [{:keys [value]} (r/state this)]
+                                           (change-handler (apply f value args))))
+                            :on-change change-handler}))}))
