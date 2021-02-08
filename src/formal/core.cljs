@@ -92,10 +92,6 @@
                    :vector coll/vector
                    :maybe maybe
                    (component components namespace input)) props]))
-    :component-did-mount (fn [this]
-                           (let [{:keys [value error on-change]} (r/state this)]
-                             (when (not error)
-                               (on-change value))))
     :get-initial-state (fn [this]
                          (let [{:keys [default-value validate explain]} (r/props this)
                                change-handler (fn [value]
