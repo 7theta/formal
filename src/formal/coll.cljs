@@ -19,7 +19,10 @@
                         (->> children
                              (clojure.core/map-indexed
                               (fn [index [id options schema]]
-                                (let [props (merge {:default-value (get default-value id)} schema options
+                                (let [props (merge (when (and (map? default-value)
+                                                              (contains? default-value id))
+                                                     {:default-value (get default-value id)})
+                                                   schema options
                                                    {:id id
                                                     :index index
                                                     :components components

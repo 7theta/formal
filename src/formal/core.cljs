@@ -92,8 +92,13 @@
                    :vector coll/vector
                    :maybe maybe
                    (component components namespace input)) props]))
+    :component-did-mount (fn [this]
+                           (let [{:keys [default-value] :as props} (r/props this)
+                                 {:keys [on-change]} (r/state this)]
+                             (when (contains? props :default-value)
+                               (on-change default-value))))
     :get-initial-state (fn [this]
-                         (let [{:keys [default-value validate explain]} (r/props this)
+                         (let [{:keys [default-value validate explain] :as props} (r/props this)
                                change-handler (fn [value]
                                                 (let [{:keys [on-change validate explain]} (r/props this)
                                                       valid? (validate value)]
@@ -102,7 +107,8 @@
                                                                               (explain value))})
                                                   (when valid? ((fsafe on-change) value))))]
                            {:value default-value
-                            :error (when (and default-value (not (validate default-value)))
+                            :error (when (and (contains? props :default-value)
+                                              (not (validate default-value)))
                                      (explain default-value))
                             :on-update (fn [f & args]
                                          (let [{:keys [value]} (r/state this)]
